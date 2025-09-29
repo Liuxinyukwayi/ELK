@@ -1,8 +1,6 @@
 #!/bin/bash
 
-HOST1="172.20.10.3"
-HOST2="172.20.10.5"
-HOST3="172.20.10.6"
+source ./.vars/vars.sh
 
 # Install Ansible on a Linux system
 sudo apt update

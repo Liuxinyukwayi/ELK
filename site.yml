@@ -1,0 +1,147 @@
+---
+- name: Install common packages on all nodes
+  hosts: elk_nodes
+  become: yes
+  tasks:
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+        cache_valid_time: 3600
+
+    - name: Install Java (OpenJDK)
+      apt:
+        name: openjdk-11-jdk
+        state: present
+
+    - name: Ensure unzip and apt-transport-https
+      apt:
+        name:
+          - apt-transport-https
+          - ca-certificates
+          - curl
+          - gnupg
+          - lsb-release
+        state: present
+
+- name: Install Elasticsearch on all es nodes
+  hosts: elasticsearch
+  become: yes
+  vars_files:
+    - .vars/elasticsearch.yml
+  tasks:
+    - name: Add Elastic GPG key
+      apt_key:
+        url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        state: present
+
+    - name: Add Elastic apt repo
+      apt_repository:
+        repo: "deb https://artifacts.elastic.co/packages/8.x/apt stable main"
+        state: present
+
+    - name: apt update after adding repo
+      apt:
+        update_cache: yes
+
+    - name: Install elasticsearch
+      apt:
+        name: elasticsearch
+        state: latest
+
+    - name: Configure elasticsearch.yml
+      template:
+        src: templates/elasticsearch.yml.j2
+        dest: /etc/elasticsearch/elasticsearch.yml
+        owner: root
+        group: root
+        mode: 0644
+      notify: restart elasticsearch
+
+    - name: Configure jvm.options heap sizing
+      lineinfile:
+        dest: /etc/elasticsearch/jvm.options.d/heap.options
+        create: yes
+        line: "-Xms{{ es_heap_size }}"
+      notify: restart elasticsearch
+
+  handlers:
+    - name: restart elasticsearch
+      service:
+        name: elasticsearch
+        state: restarted
+        enabled: yes
+
+- name: Install Kibana on kibana group
+  hosts: kibana
+  become: yes
+  tasks:
+    - name: Add Elastic GPG key
+      apt_key:
+        url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        state: present
+
+    - name: Add Elastic apt repo (kibana)
+      apt_repository:
+        repo: "deb https://artifacts.elastic.co/packages/8.x/apt stable main"
+        state: present
+
+    - name: apt update
+      apt:
+        update_cache: yes
+
+    - name: Install kibana
+      apt:
+        name: kibana
+        state: latest
+
+    - name: Copy kibana config
+      template:
+        src: templates/kibana.yml.j2
+        dest: /etc/kibana/kibana.yml
+      notify: restart kibana
+
+  handlers:
+    - name: restart kibana
+      service:
+        name: kibana
+        state: restarted
+        enabled: yes
+
+- name: Install Logstash on logstash group
+  hosts: logstash
+  become: yes
+  tasks:
+    - name: Ensure got apt repo (elastic)
+      apt_key:
+        url: https://artifacts.elastic.co/GPG-KEY-elasticsearch
+        state: present
+
+    - name: Add Elastic apt repo
+      apt_repository:
+        repo: "deb https://artifacts.elastic.co/packages/8.x/apt stable main"
+        state: present
+
+    - name: apt update
+      apt:
+        update_cache: yes
+
+    - name: Install logstash
+      apt:
+        name: logstash
+        state: latest
+
+    - name: Copy a basic logstash pipeline
+      copy:
+        content: |
+          input { beats { port => 5044 } }
+          filter { }
+          output { elasticsearch { hosts => ["http://10.0.0.11:9200","http://10.0.0.12:9200","http://10.0.0.13:9200"] } }
+        dest: /etc/logstash/conf.d/10-beats.conf
+      notify: restart logstash
+
+  handlers:
+    - name: restart logstash
+      service:
+        name: logstash
+        state: restarted
+        enabled: yes

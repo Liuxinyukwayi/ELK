@@ -1,0 +1,12 @@
+cluster.name: "{{ es_cluster_name }}"
+node.name: "{{ inventory_hostname }}"
+network.host: "{{ es_network_host }}"
+path.data: /var/lib/elasticsearch
+path.logs: /var/log/elasticsearch
+
+discovery.seed_hosts: {{ es_seed_hosts }}
+cluster.initial_master_nodes: {{ es_initial_master_nodes }}
+
+# 根据需要开关安全（见下方注意）
+# xpack.security.enabled: true
+# 如果启用 security，需额外处理 bootstrap、证书与密码（官方强烈建议）。
