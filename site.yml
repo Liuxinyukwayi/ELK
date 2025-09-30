@@ -27,7 +27,7 @@
   hosts: elasticsearch
   become: yes
   vars_files:
-    - .vars/elasticsearch.yml
+    - group_vars/elasticsearch.yml
   tasks:
     - name: Add Elastic GPG key
       apt_key:
