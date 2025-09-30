@@ -16,4 +16,6 @@ ssh-copy-id -i ~/.ssh/id_ansible.pub cc@$HOST2
 ssh-copy-id -i ~/.ssh/id_ansible.pub cc@$HOST3
 echo "SSH key setup completed."
 
+echo -e "Host 172.20.10.*\n    User cc\n    IdentityFile /root/.ssh/id_ansible" >> ~/.ssh/config
+chmod 600 ~/.ssh/config
 
