@@ -1,0 +1,13 @@
+# sudoers.yml
+- hosts: all
+  become: yes
+  become_method: sudo
+  become_user: root
+  tasks:
+    - name: Allow passwordless sudo for user cc
+      copy:
+        dest: /etc/sudoers.d/cc
+        content: "cc ALL=(ALL) NOPASSWD:ALL\n"
+        owner: root
+        group: root
+        mode: '0440'

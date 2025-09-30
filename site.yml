@@ -1,4 +1,5 @@
 ---
+
 - name: Install common packages on all nodes
   hosts: elk_nodes
   become: yes
