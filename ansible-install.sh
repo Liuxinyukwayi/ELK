@@ -1,6 +1,6 @@
 #!/bin/bash
 
-source ./.vars/vars.sh
+source ./group_vars/vars.sh
 
 # Install Ansible on a Linux system
 sudo apt update
